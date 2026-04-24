@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>p5.js DJ Test Bench</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
+    <style>
+        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #1a1a1a; color: white; font-family: sans-serif; }
+        canvas { border: 2px solid #444; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+<script>
+let trackA, trackB;
+let analyzerA, analyzerB;
+
+function preload() {
+    // テスト用のフリー音源（適宜自分のmp3ファイル名に書き換えてください）
+    // ※ 外部サイトのURLだとCORSエラーが出る場合があるため、ローカル実行時は同じフォルダに音源を置くのがベストです
+    trackA = loadSound('track1.mp3'); 
+    trackB = loadSound('track2.mp3');
+}
+
+function setup() {
+    createCanvas(600, 400);
+    
+    // 音量解析（ビジュアライザー用）
+    analyzerA = new p5.FFT();
+    analyzerA.setInput(trackA);
+    analyzerB = new p5.FFT();
+    analyzerB.setInput(trackB);
+}
+
+function draw() {
+    background(30);
+
+    // ユーザーへの案内
+    fill(255);
+    textAlign(CENTER);
+    text("Left Side: Track A | Right Side: Track B", width / 2, 20);
+    text("Click to Play/Pause", width / 2, 40);
+
+    // センターライン
+    stroke(100);
+    line(width / 2, 50, width / 2, height - 50);
+
+    // Track A のビジュアル（左）
+    drawVisual(analyzerA, 0, width / 2, [0, 255, 200]);
+    
+    // Track B のビジュアル（右）
+    drawVisual(analyzerB, width / 2, width / 2, [255, 0, 150]);
+}
+
+function drawVisual(fft, x, w, col) {
+    let spectrum = fft.analyze();
+    noStroke();
+    fill(col[0], col[1], col[2], 150);
+    for (let i = 0; i < spectrum.length; i += 10) {
+        let h = map(spectrum[i], 0, 255, 0, height / 2);
+        rect(x + map(i, 0, spectrum.length, 0, w), height - h, w / 50, h);
+    }
+}
+
+function mousePressed() {
+    // ブラウザの音響制限を解除
+    userStartAudio();
+
+    if (mouseX < width / 2) {
+        togglePlay(trackA);
+    } else {
+        togglePlay(trackB);
+    }
+}
+
+function togglePlay(track) {
+    if (track.isPlaying()) {
+        track.pause();
+    } else {
+        track.play();
+    }
+}
+</script>
+</body>
+</html>
