@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>p5.js DJ Test Bench with Chord Display</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
+    <style>
+        body { margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background: #1a1a1a; color: white; font-family: sans-serif; }
+        canvas { border: 2px solid #444; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+<script>
+let trackA, trackB;
+let analyzerA, analyzerB;
+let analysisData; // JSONデータ格納用
+
+function preload() {
+    // 音楽ファイルの読み込み
+    trackA = loadSound('track1.mp3'); 
+    trackB = loadSound('track2.mp3');
+    // ステップ1で作ったJSONファイルを読み込む
+    analysisData = loadJSON('analysis.json');
+}
+
+function setup() {
+    createCanvas(600, 500); // コード表示用に高さを少し広げました
+    
+    analyzerA = new p5.FFT();
+    analyzerA.setInput(trackA);
+    analyzerB = new p5.FFT();
+    analyzerB.setInput(trackB);
+}
+
+function draw() {
+    background(30);
+
+    // 1. 基本UI
+    fill(255);
+    textAlign(CENTER);
+    textSize(14);
+    text("Left: Track A | Right: Track B", width / 2, 25);
+    
+    stroke(100);
+    line(width / 2, 50, width / 2, 350);
+
+    // 2. ビジュアライザー表示
+    drawVisual(analyzerA, 0, width / 2, [0, 255, 200]);
+    drawVisual(analyzerB, width / 2, width / 2, [255, 0, 150]);
+
+    // 3. データ表示エリア（下部）
+    if (analysisData) {
+        drawInfo(trackA, analysisData.trackA, 0, "A");
+        drawInfo(trackB, analysisData.trackB, width / 2, "B");
+    }
+}
+
+function drawVisual(fft, x, w, col) {
+    let spectrum = fft.analyze();
+    noStroke();
+    fill(col[0], col[1], col[2], 120);
+    for (let i = 0; i < spectrum.length; i += 15) {
+        let h = map(spectrum[i], 0, 255, 0, height / 3);
+        rect(x + map(i, 0, spectrum.length, 0, w), 350 - h, w / 40, h);
+    }
+}
+
+// コードとBPMを表示する関数
+function drawInfo(track, data, x, label) {
+    let currentTime = track.currentTime();
+    let currentChord = "---";
+
+    // 現在の秒数に合うコードをデータから探す
+    for (let i = 0; i < data.chords.length; i++) {
+        if (currentTime >= data.chords[i].time) {
+            currentChord = data.chords[i].name;
+        } else {
+            break; 
+        }
+    }
+
+    fill(255);
+    textAlign(CENTER);
+    textSize(16);
+    text("BPM: " + data.bpm, x + width / 4, 390);
+    
+    // コード名を目立たせる
+    textSize(48);
+    fill(label === "A" ? "#00ffc8" : "#ff0096");
+    text(currentChord, x + width / 4, 450);
+}
+
+function mousePressed() {
+    userStartAudio();
+    if (mouseX < width / 2) {
+        togglePlay(trackA);
+    } else {
+        togglePlay(trackB);
+    }
+}
+
+function togglePlay(track) {
+    if (track.isPlaying()) {
+        track.pause();
+    } else {
+        track.play();
+    }
+}
+</script>
+</body>
+</html>

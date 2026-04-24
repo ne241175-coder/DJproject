@@ -1,0 +1,3 @@
+analysis.pyをターミナル上で同じフォルダ内（cdで移動する）で実行する
+実行すると、analysis.jsonが作られるため、index.htmlをvscodeからliveserverで起動すると
+BPMとコードの解析の結果が得られる
