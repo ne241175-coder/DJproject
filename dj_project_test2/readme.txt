@@ -1,3 +1,5 @@
 analysis.pyをターミナル上で同じフォルダ内（cdで移動する）で実行する
 実行すると、analysis.jsonが作られるため、index.htmlをvscodeからliveserverで起動すると
 BPMとコードの解析の結果が得られる
+エラーが出た場合、設定からプライバシーとセキュリティ、ターミナルにフルディスクアクセスを許可
+また、pip3 install librosa numpy でlibrosaのライブラリをインストールしておくこと
