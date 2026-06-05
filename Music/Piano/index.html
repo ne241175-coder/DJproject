@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ブラウザピアノ & コードファインダー</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+    🎹 ChordFinder (ブラウザピアノ & コード判定)
+</header>
+
+<div id="pitch-display">
+    <div id="chord-result">--</div>
+    <div id="display-content">鍵盤を押すとコードを判定します</div>
+</div>
+
+<div class="keyboard">
+    <div id="piano-wrap">
+        <div class="wk" id="21"></div><div class="bk" id="22"></div><div class="wk" id="23"></div><div class="wk" id="24"></div><div class="bk" id="25"></div><div class="wk" id="26"></div><div class="bk" id="27"></div><div class="wk" id="28"></div>
+        <div class="wk" id="29"></div><div class="bk" id="30"></div><div class="wk" id="31"></div><div class="bk" id="32"></div><div class="wk" id="33"></div><div class="bk" id="34"></div><div class="wk" id="35"></div><div class="wk" id="36"></div>
+        <div class="bk" id="37"></div><div class="wk" id="38"></div><div class="bk" id="39"></div><div class="wk" id="40"></div><div class="wk" id="41"></div><div class="bk" id="42"></div><div class="wk" id="43"></div>
+        <div class="bk" id="44"><span class="k">a</span></div><div class="wk" id="45"><span class="k">Z</span></div><div class="bk" id="46"><span class="k">s</span></div><div class="wk" id="47"><span class="k">X</span></div>
+        <div class="wk" id="48"><span class="r">C</span></div><div class="bk" id="49"><span class="k">f</span></div><div class="wk" id="50"><span class="k">V</span></div><div class="bk" id="51"><span class="k">g</span></div>
+        <div class="wk" id="52"><span class="k">B</span></div><div class="wk" id="53"><span class="k">N</span></div><div class="bk" id="54"><span class="k">j</span></div><div class="wk" id="55"><span class="k">M</span></div>
+        <div class="bk" id="56"><span class="k">1<br>k</span></div><div class="wk" id="57"><span class="k">Q<br>,</span></div><div class="bk" id="58"><span class="k">2<br>l</span></div><div class="wk" id="59"><span class="k">W<br>.</span></div>
+        <div class="wk" id="60"><span class="r">E<br>/</span></div><div class="bk" id="61"><span class="k">4<br>:</span></div><div class="wk" id="62"><span class="k">R<br>\</span></div><div class="bk" id="63"><span class="k">5<br>]</span></div>
+        <div class="wk" id="64"><span class="k">T</span></div><div class="wk" id="65"><span class="k">Y</span></div><div class="bk" id="66"><span class="k">7</span></div><div class="wk" id="67"><span class="k">U</span></div>
+        <div class="bk" id="68"><span class="k">8</span></div><div class="wk" id="69"><span class="k">I</span></div><div class="bk" id="70"><span class="k">9</span></div><div class="wk" id="71"><span class="k">O</span></div>
+        <div class="wk" id="72"><span class="r">P</span></div><div class="bk" id="73"><span class="k">-</span></div><div class="wk" id="74"><span class="k">@</span></div><div class="bk" id="75"><span class="k>^</span></div>
+        <div class="wk" id="76"><span class="k">[</span></div><div class="wk" id="77"></div><div class="bk" id="78"></div><div class="wk" id="79"></div><div class="bk" id="80"></div><div class="wk" id="81"></div><div class="bk" id="82"></div><div class="wk" id="83"></div><div class="wk" id="84"></div>
+        <div class="bk" id="85"></div><div class="wk" id="86"></div><div class="bk" id="87"></div><div class="wk" id="88"></div><div class="wk" id="89"></div><div class="bk" id="90"></div><div class="wk" id="91"></div><div class="bk" id="92"></div>
+        <div class="wk" id="93"></div><div class="bk" id="94"></div><div class="wk" id="95"></div><div class="wk" id="96"></div><div class="bk" id="97"></div><div class="wk" id="98"></div><div class="bk" id="99"></div><div class="wk" id="100"></div>
+        <div class="wk" id="101"></div><div class="bk" id="102"></div><div class="wk" id="103"></div><div class="wk" id="104"></div><div class="wk" id="105"></div><div class="bk" id="106"></div><div class="wk" id="107"></div><div class="wk" id="108"></div>
+    </div>
+</div>
+
+<div class="attachment">
+    音量: <span class="arrow" onclick="pianovlm(-1)">&thinsp;↓&thinsp;</span> <span class="arrow" onclick="pianovlm(1)">&thinsp;↑&thinsp;</span> 
+    <input type="text" id="vol_piano" class="vlm_piano" maxlength="4" value="5">
+    <span style="margin-left: 20px; color: #666;">※PCキーボードでも演奏可能です（A, Z, S, X, C...）</span>
+</div>
+
+<script src="chord-finder.js"></script>
+<script src="piano.js"></script>
+</body>
+</html>

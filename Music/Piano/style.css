@@ -1,0 +1,133 @@
+/* --- 全体レイアウト & CSS --- */
+body {
+  background-color: #f4f4f4;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+}
+.header {
+  margin: 0 auto 10px auto;
+  width: 1040px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+.keyboard {
+  margin: 0 auto;
+  width: 1040px;
+  height: 125px;
+}
+#piano-wrap * {
+  box-sizing: border-box;
+  font-family: Arial;
+  user-select: none;
+}
+#piano-wrap {
+  margin: 0 auto;
+  display: flex;
+  background: black;
+  width: 1040px;
+  height: 119px;
+  border: 2px solid #333;
+  border-radius: 0 0 4px 4px;
+}
+#piano-wrap > div {
+  position: relative;
+  left: 0px;
+}
+.wk {
+  width: 20px;
+  height: 119px;
+  background-color: white;
+  border-radius: 0 0 4px 4px;
+  border: solid 1px black;
+  bottom: 0px;
+  color: black;
+  cursor: pointer;
+}
+.bk {
+  position: relative;
+  width: 14px;
+  height: 78px;
+  background: #000;
+  margin-left: -7px;
+  margin-right: -7px;
+  z-index: 2;
+  border: solid black 2px;
+  transition: 100ms;
+  color: white;
+  text-align: center;
+  cursor: pointer;
+}
+.k {
+  position: absolute;
+  display: block;
+  bottom: 1px;
+  width: 100%;
+  text-align: center;
+  font-size: small;
+  pointer-events: none;
+}
+.r {
+  position: absolute;
+  display: block;
+  bottom: 1px;
+  width: 100%;
+  text-align: center;
+  font-size: small;
+  font-weight: bold;
+  color: red;
+  pointer-events: none;
+}
+.attachment {
+  margin: 10px auto;
+  width: 1040px;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+}
+.arrow {
+  background: #ccc;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+.vlm_piano {
+  width: 40px;
+  padding: 3px;
+  border-radius: 5px;
+  border: 2px solid #ccc;
+  text-align: right;
+}
+
+/* --- ディスプレイエリアの強化 --- */
+#pitch-display {
+  text-align: center;
+  background: #222;
+  color: #0f0;
+  padding: 20px;
+  font-family: monospace;
+  min-height: 120px;
+  margin: 20px auto;
+  width: 1040px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  box-shadow: inset 0 0 10px #000;
+}
+#chord-result {
+  font-size: 42px;
+  font-weight: bold;
+  color: #ffcc00;
+  margin-bottom: 10px;
+}
+#display-content {
+  width: 100%;
+  font-size: 18px;
+  color: #aff;
+}
