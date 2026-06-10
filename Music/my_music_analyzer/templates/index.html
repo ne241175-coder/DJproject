@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Music Genre & BPM Analyzer</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 楽曲リズム・ジャンル解析</h1>
+        <div class="search-box">
+            <input type="text" id="youtube-url" placeholder="YouTubeのURLを入力">
+            <button id="analyze-btn">解析する</button>
+        </div>
+        
+        <div id="loading" class="hidden">解析中...（数十秒かかる場合があります）</div>
+        
+        <div id="result" class="hidden">
+            <h2>📊 解析結果</h2>
+            <p class="bpm-display">BPM: <span id="bpm-value">0</span></p>
+            <h3>🔮 ジャンルの可能性</h3>
+            <ul id="genre-list"></ul>
+        </div>
+    </div>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
