@@ -8,7 +8,6 @@ app = Flask(__name__)
 import numpy as np
 
 def calculate_genre_probabilities(y, sr, bpm):
-    # エレクトロを廃止し、5つのジャンルで再構成
     scores = {
         "Latin/Samba": 10,
         "Funk": 10,

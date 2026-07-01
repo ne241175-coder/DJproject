@@ -1,0 +1,12 @@
+/* 全体のリセット */
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden; /* スクロールバーを隠す */
+    background-color: #e2f4fd; /* 画像のような薄い水色 */
+    font-family: sans-serif;
+}
+
+canvas {
+    display: block; /* 下部にできる謎の隙間を消す */
+}
