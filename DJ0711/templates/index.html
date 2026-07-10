@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>DJ0711 - 解析(Phase A 動作確認用)</title>
+<style>
+  body { font-family: -apple-system, sans-serif; background:#14151a; color:#f0f0f5; padding:24px; }
+  .card { background:#1e2029; border-radius:12px; padding:24px; max-width:640px; margin-bottom:24px; }
+  label { display:block; font-size:13px; color:#8b8ea0; margin:14px 0 4px; }
+  input[type=text], input[type=url], input[type=file] { width:100%; padding:8px; border-radius:6px; border:1px solid #333; background:#101119; color:#f0f0f5; }
+  button { margin-top:16px; padding:10px 16px; border:none; border-radius:8px; background:#7c5cff; color:white; cursor:pointer; }
+  pre { background:#101119; padding:12px; border-radius:8px; max-height:300px; overflow:auto; font-size:12px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  td, th { padding:6px 8px; border-bottom:1px solid #333; text-align:left; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:12px; }
+  .running { background:rgba(124,92,255,.2); color:#cbb9ff; }
+  .done { background:rgba(80,220,140,.2); color:#7be3ab; }
+  .error { background:rgba(255,92,138,.2); color:#ffb3c6; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>DJ0711 解析(Phase A)</h1>
+    <p><a href="/live" style="color:#cbb9ff;">→ ライブセッションを開始</a></p>
+    <form id="analyzeForm">
+      <label>YouTube URL(ローカルファイルを使う場合は空欄)</label>
+      <input type="url" name="youtube_url" placeholder="https://www.youtube.com/watch?v=...">
+      <label>またはローカルファイル</label>
+      <input type="file" name="file" accept="audio/*">
+      <label>ジャンルのヒント(任意)</label>
+      <input type="text" name="genre_hint" placeholder="例: Jazz">
+      <button type="submit">解析開始</button>
+    </form>
+    <div id="jobStatus" style="margin-top:16px;"></div>
+  </div>
+
+  <div class="card">
+    <h2>解析済みトラック</h2>
+    <table>
+      <tr><th>ID</th><th>タイトル</th><th>BPM</th><th>Key</th><th>ジャンル</th><th>長さ(秒)</th></tr>
+      {% for t in tracks %}
+      <tr>
+        <td>{{ t.id }}</td>
+        <td>{{ t.title }}</td>
+        <td>{{ "%.1f"|format(t.tempo_bpm) }}</td>
+        <td>{{ t.key_name }} ({{ t.key_camelot }})</td>
+        <td>{{ t.genre }} ({{ "%.2f"|format(t.genre_confidence) }})</td>
+        <td>{{ "%.1f"|format(t.duration_sec) }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+
+<script>
+const form = document.getElementById("analyzeForm");
+const statusBox = document.getElementById("jobStatus");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fd = new FormData(form);
+  statusBox.innerHTML = "送信中...";
+  const res = await fetch("/api/analyze", { method: "POST", body: fd });
+  const data = await res.json();
+  if (!res.ok) {
+    statusBox.innerHTML = `<span class="badge error">エラー: ${data.error}</span>`;
+    return;
+  }
+  poll(data.job_id);
+});
+
+async function poll(jobId) {
+  const res = await fetch(`/api/status/${jobId}`);
+  const data = await res.json();
+  const badgeClass = data.status === "done" ? "done" : (data.status === "error" ? "error" : "running");
+  statusBox.innerHTML = `
+    <span class="badge ${badgeClass}">${data.status}</span>
+    <pre>${(data.logs || []).join("\n")}</pre>
+    ${data.error ? `<p style="color:#ffb3c6">${data.error}</p>` : ""}
+    ${data.track_id ? `<p>track_id: ${data.track_id}</p>` : ""}
+  `;
+  if (data.status === "running") {
+    setTimeout(() => poll(jobId), 1500);
+  } else if (data.status === "done") {
+    setTimeout(() => location.reload(), 1500);
+  }
+}
+</script>
+</body>
+</html>

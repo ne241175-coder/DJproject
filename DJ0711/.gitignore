@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+data/*.sqlite3
+storage/audio/*
+!storage/audio/.gitkeep
+.DS_Store
