@@ -31,6 +31,11 @@ def extract_centroid(y: np.ndarray, sr: int, beat_times: np.ndarray, track_end: 
     return beat_sync(raw, beat_times, sr, track_end)
 
 
+def extract_zcr(y: np.ndarray, sr: int, beat_times: np.ndarray, track_end: float) -> tuple[np.ndarray, np.ndarray]:
+    raw = _safe_extract(lambda: librosa.feature.zero_crossing_rate(y=y), (1, 1))
+    return beat_sync(raw, beat_times, sr, track_end)
+
+
 def normalize(x: np.ndarray) -> np.ndarray:
     """0-1のmin-max正規化(定数配列の場合はゼロ埋め)。"""
     lo, hi = np.min(x), np.max(x)

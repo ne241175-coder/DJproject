@@ -10,7 +10,11 @@ from analysis.models import BeatFeatures, TrackAnalysis
 
 
 def analyze_track(
-    raw_path: Path, workdir: Path, identifier: str, genre_hint: str | None = None
+    raw_path: Path,
+    workdir: Path,
+    identifier: str,
+    genre_hint: str | None = None,
+    confirmed_examples: list[tuple[str, dict[str, float]]] | None = None,
 ) -> tuple[TrackAnalysis, Path]:
     """生の音声ファイルから解析結果一式を作る。
 
@@ -28,13 +32,16 @@ def analyze_track(
     chroma, edges = timbre.extract_chroma(y, sr, beat_times, duration_sec)
     rms, _ = timbre.extract_rms(y, sr, beat_times, duration_sec)
     centroid, _ = timbre.extract_centroid(y, sr, beat_times, duration_sec)
+    zcr, _ = timbre.extract_zcr(y, sr, beat_times, duration_sec)
 
     key_result = key.detect_key(chroma)
     chord_labels, _chord_confidence = chords.detect_chords(chroma)
     vocal_presence = vocals.detect_vocal_presence(y, sr, beat_times, duration_sec)
     fill_score = drums.detect_drum_fill(y, sr, beat_times, duration_sec)
 
-    genre_result = genre.classify_genre(tempo_bpm, chroma, centroid, rms, genre_hint)
+    genre_result = genre.classify_genre(
+        tempo_bpm, chroma, centroid, rms, zcr, genre_hint, confirmed_examples
+    )
 
     sections = structure.detect_structure(
         chroma=chroma,

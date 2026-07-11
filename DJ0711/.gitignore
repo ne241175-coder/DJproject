@@ -4,4 +4,6 @@ __pycache__/
 data/*.sqlite3
 storage/audio/*
 !storage/audio/.gitkeep
+storage/matched/*
+!storage/matched/.gitkeep
 .DS_Store

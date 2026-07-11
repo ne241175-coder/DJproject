@@ -6,6 +6,11 @@ from typing import Callable
 
 from analysis.similarity import GENRE_WEIGHTS, TrackFeatures, _bpm_distance, _camelot_distance
 
+# ネットワーク上で線を描くジャンル間類似度の下限。これ以下(70%以下)の組み合わせは
+# 「近い曲がない」とみなしエッジを引かない。選曲時のジャンル間距離計算(genre_distance_lookup)
+# には影響させない(あくまで描画エッジのフィルタ)。
+NETWORK_MIN_SIMILARITY = 0.70
+
 
 @dataclass
 class GenreCentroid:
@@ -62,11 +67,14 @@ def build_genre_network(features: list[TrackFeatures]) -> tuple[dict, Callable[[
         for j in range(i + 1, len(genres)):
             a, b = centroids[genres[i]], centroids[genres[j]]
             dist = _centroid_distance(a, b)
+            similarity = 1.0 / (1.0 + dist)
+            if similarity <= NETWORK_MIN_SIMILARITY:
+                continue  # 近い曲がない組み合わせは線を繋がない
             edges.append({
                 "genre_a": genres[i],
                 "genre_b": genres[j],
                 "distance": round(dist, 4),
-                "similarity": round(1.0 / (1.0 + dist), 4),
+                "similarity": round(similarity, 4),
             })
 
     def genre_distance_lookup(genre_a: str, genre_b: str) -> float:

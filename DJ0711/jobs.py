@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 import re
 import shutil
@@ -94,8 +95,16 @@ def _run_job(job_id: str, youtube_url: str | None, uploaded_path: Path | None, g
             raw_path = io.load_uploaded_file(uploaded_path, workdir, job_id)
             title = uploaded_path.stem
 
+        with db.transaction() as conn:
+            example_rows = db.list_confirmed_genre_examples(conn)
+        confirmed_examples = [
+            (row["genre"], json.loads(row["genre_features_json"])) for row in example_rows
+        ]
+
         logger.info("解析を開始します...")
-        result, trimmed_path = pipeline.analyze_track(raw_path, workdir, job_id, genre_hint)
+        result, trimmed_path = pipeline.analyze_track(
+            raw_path, workdir, job_id, genre_hint, confirmed_examples
+        )
         logger.info(
             f"解析完了: tempo={result.tempo_bpm:.1f}bpm key={result.key.key_name}"
             f"({result.key.camelot}) genre={result.genre.genre}"

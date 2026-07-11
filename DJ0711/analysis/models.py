@@ -39,6 +39,7 @@ class GenreResult:
     confidence: float
     scores: dict[str, float] = field(default_factory=dict)
     features_used: dict[str, float] = field(default_factory=dict)
+    source: str = "rule"  # 'hint'(ユーザー指定) / 'knn'(蓄積データとの比較) / 'rule'(ルールベース)
 
 
 @dataclass

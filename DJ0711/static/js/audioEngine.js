@@ -8,12 +8,6 @@ export class AudioEngine {
     this.onEnded = null; // (trackId) => void
   }
 
-  resume() {
-    if (this.ctx.state === "suspended") {
-      this.ctx.resume();
-    }
-  }
-
   async _loadBuffer(url) {
     const res = await fetch(url);
     const arrayBuffer = await res.arrayBuffer();
@@ -31,13 +25,12 @@ export class AudioEngine {
     return { source, gainNode };
   }
 
-  async playTrack(trackId, url) {
-    this.resume();
+  async playTrack(trackId, url, offsetSec = 0) {
     const buffer = await this._loadBuffer(url);
     const { source, gainNode } = this._makeNode(buffer, 1.0);
 
     const startTime = this.ctx.currentTime;
-    source.start(0);
+    source.start(0, offsetSec);
     source.onended = () => {
       if (this.current && this.current.source === source && this.onEnded) {
         this.onEnded(trackId);
@@ -48,13 +41,12 @@ export class AudioEngine {
     return buffer.duration;
   }
 
-  async crossfadeTo(trackId, url, durationSec = 4) {
-    this.resume();
+  async crossfadeTo(trackId, url, durationSec = 4, offsetSec = 0) {
     const buffer = await this._loadBuffer(url);
     const { source, gainNode } = this._makeNode(buffer, 0.0);
 
     const now = this.ctx.currentTime;
-    source.start(0);
+    source.start(0, offsetSec);
     gainNode.gain.setValueAtTime(0.0, now);
     gainNode.gain.linearRampToValueAtTime(1.0, now + durationSec);
 

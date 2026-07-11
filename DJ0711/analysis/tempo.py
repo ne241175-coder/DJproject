@@ -45,7 +45,18 @@ def _detect_tempo_octave_corrected(onset_env: np.ndarray, sr: int) -> float:
         + _strength_at(b / 2, cand_bpms, cand_strength)
         for b in report_bpms
     ])
-    return float(report_bpms[np.argmax(folded)])
+    winner = float(report_bpms[np.argmax(folded)])
+
+    # 三連系(3:2)補正。duple畳み込みだけだと、真のBPMの2/3で刻む三連系の曲
+    # (137→91, 140→94 等)は低い方が勝ってしまう。勝者の1.5倍テンポが典型帯にあり、
+    # その生強度が勝者の生強度以上(=真の拍がそこに確かにある)なら、そちらを採用する。
+    triple = winner * 1.5
+    if (config.TEMPO_TYPICAL_MIN <= triple <= config.TEMPO_TYPICAL_MAX
+            and _strength_at(triple, cand_bpms, cand_strength)
+                >= config.TEMPO_TRIPLE_RATIO_THRESHOLD * _strength_at(winner, cand_bpms, cand_strength)):
+        winner = triple
+
+    return winner
 
 
 def detect_tempo(y: np.ndarray, sr: int) -> tuple[float, np.ndarray]:

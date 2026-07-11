@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS tracks (
     genre               TEXT,
     genre_confidence    REAL,
     genre_scores_json   TEXT,
+    genre_source        TEXT NOT NULL DEFAULT 'auto',  -- 'auto'(自動推定) / 'user'(ヒント指定または後からの修正)
+    genre_features_json TEXT,                          -- KNN比較用の特徴量(tempo/chroma_var/rms_var/centroid_mean/zcr_mean)
+    genres_json         TEXT,                          -- 複数ジャンルタグ(JSON配列、先頭=主ジャンル=genreカラムと同じ値)
 
     beats_json          TEXT NOT NULL,               -- {times, rms, centroid, vocal_presence, drum_fill}
     chord_labels_json   TEXT

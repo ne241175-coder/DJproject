@@ -50,3 +50,16 @@ def camelot_to_position(camelot: str) -> tuple[int, str]:
     letter = camelot[-1]
     number = int(camelot[:-1])
     return number, letter
+
+
+# Camelot表記 -> ピッチクラス(0-11)の逆引き。CAMELOT_MAJOR/MINORは値の重複がない
+# (メジャーは末尾B、マイナーは末尾Aで完全に分かれる)ため、単純にマージして反転できる。
+_CAMELOT_TO_PITCH_CLASS: dict[str, int] = {
+    **{v: k for k, v in CAMELOT_MAJOR.items()},
+    **{v: k for k, v in CAMELOT_MINOR.items()},
+}
+
+
+def camelot_to_pitch_class(camelot: str) -> int:
+    """"8B" -> 0 (C) のように、Camelot表記からピッチクラス(0-11)を求める(移調計算用)。"""
+    return _CAMELOT_TO_PITCH_CLASS[camelot]
