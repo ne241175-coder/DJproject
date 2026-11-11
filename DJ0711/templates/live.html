@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>DJ0711 - ライブセッション</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #0a0a0f; color: #f0f0f5; font-family: -apple-system, sans-serif; overflow: hidden; height: 100%; }
+  #vjLayer { position: fixed; inset: 0; z-index: 0; }
+  #networkLayer { position: fixed; inset: 0; z-index: 1; }
+  #controlBar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 3;
+    display: flex; align-items: center; gap: 12px; padding: 10px 16px;
+    background: rgba(10,10,15,0.6); backdrop-filter: blur(4px);
+    font-size: 13px;
+  }
+  select, button { padding: 6px 10px; border-radius: 6px; border: 1px solid #444; background: #1a1c26; color: #f0f0f5; }
+  button { cursor: pointer; background: #7c5cff; border: none; }
+  #status { flex: 1; color: #cbb9ff; }
+  #remaining { font-variant-numeric: tabular-nums; color: #8b8ea0; }
+  #genreList {
+    position: fixed; z-index: 4; top: 60px; left: 50%; transform: translateX(-50%);
+    background: #1e2029; border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+    padding: 16px; min-width: 280px; display: none;
+  }
+  #genreList ul { list-style: none; margin: 0; padding: 0; }
+  #genreList li { padding: 8px 6px; border-bottom: 1px dashed rgba(255,255,255,0.08); }
+  #genreList li:hover { color: #cbb9ff; }
+  a.back-link { position: fixed; bottom: 10px; left: 16px; z-index: 3; color: #8b8ea0; font-size: 12px; }
+</style>
+</head>
+<body>
+  <div id="vjLayer"></div>
+  <div id="networkLayer"></div>
+
+  <div id="controlBar">
+    <select id="trackSelect"></select>
+    <button id="startBtn">開始</button>
+    <button id="pauseBtn" disabled>一時停止</button>
+    <span id="status">曲を選んで「開始」を押してください</span>
+    <span id="remaining"></span>
+  </div>
+
+  <div id="genreList"></div>
+  <a class="back-link" href="/">← 解析ページへ戻る</a>
+
+  <script src="/static/js/vendor/p5.min.js"></script>
+  <script type="module">
+    import { Player } from "/static/js/player.js";
+    import { fetchTracks } from "/static/js/api.js";
+
+    const player = new Player({
+      networkContainerId: "networkLayer",
+      vjContainerId: "vjLayer",
+      ui: {
+        statusEl: document.getElementById("status"),
+        remainingEl: document.getElementById("remaining"),
+        genreListEl: document.getElementById("genreList"),
+      },
+    });
+
+    const trackSelect = document.getElementById("trackSelect");
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+
+    async function loadTrackOptions() {
+      const tracks = await fetchTracks();
+      trackSelect.innerHTML = "";
+      for (const t of tracks) {
+        const opt = document.createElement("option");
+        opt.value = t.id;
+        opt.textContent = `${t.title} [${t.genre}] ${t.tempo_bpm.toFixed(1)}bpm`;
+        trackSelect.appendChild(opt);
+      }
+    }
+    loadTrackOptions();
+
+    startBtn.addEventListener("click", async () => {
+      const trackId = Number(trackSelect.value);
+      if (!trackId) return;
+      startBtn.disabled = true;
+      trackSelect.disabled = true;
+      pauseBtn.disabled = false;
+      await player.start(trackId);
+    });
+
+    pauseBtn.addEventListener("click", async () => {
+      pauseBtn.disabled = true;
+      const paused = await player.togglePause();
+      pauseBtn.textContent = paused ? "再開" : "一時停止";
+      pauseBtn.disabled = false;
+    });
+  </script>
+</body>
+</html>

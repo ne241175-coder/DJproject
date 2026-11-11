@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>DJ0711 - 解析(Phase A 動作確認用)</title>
+<style>
+  body { font-family: -apple-system, sans-serif; background:#14151a; color:#f0f0f5; padding:24px; }
+  .card { background:#1e2029; border-radius:12px; padding:24px; max-width:640px; margin-bottom:24px; }
+  label { display:block; font-size:13px; color:#8b8ea0; margin:14px 0 4px; }
+  input[type=text], input[type=url], input[type=file] { width:100%; padding:8px; border-radius:6px; border:1px solid #333; background:#101119; color:#f0f0f5; }
+  button { margin-top:16px; padding:10px 16px; border:none; border-radius:8px; background:#7c5cff; color:white; cursor:pointer; }
+  pre { background:#101119; padding:12px; border-radius:8px; max-height:300px; overflow:auto; font-size:12px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  td, th { padding:6px 8px; border-bottom:1px solid #333; text-align:left; }
+  .badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:12px; }
+  .running { background:rgba(124,92,255,.2); color:#cbb9ff; }
+  .done { background:rgba(80,220,140,.2); color:#7be3ab; }
+  .error { background:rgba(255,92,138,.2); color:#ffb3c6; }
+  .genre-cell { display:flex; flex-direction:column; align-items:flex-start; gap:6px; min-width:260px; }
+  .genre-tags, .genre-primary { display:flex; flex-wrap:wrap; gap:2px 10px; }
+  .tag-chip, .primary-chip { display:inline-flex; align-items:center; gap:3px; font-size:11px; white-space:nowrap; }
+  .tag-chip input, .primary-chip input { margin:0; }
+  .genre-primary { color:#cbb9ff; }
+  .genre-unknown-note { font-size:11px; color:#ffb3c6; }
+  .genre-cell button { margin:0; padding:4px 8px; font-size:12px; align-self:flex-start; }
+  .genre-source { font-size:11px; color:#8b8ea0; }
+  .genre-source.user { color:#7be3ab; }
+  .table-scroll { overflow-x:auto; }
+  .bpm-cell { display:flex; align-items:center; gap:4px; }
+  .bpm-cell input { width:64px; padding:4px 6px; border-radius:6px; border:1px solid #333; background:#101119; color:#f0f0f5; font-size:12px; }
+  .bpm-cell button { margin:0; padding:4px 8px; font-size:12px; }
+  .deleteBtn { margin:0; padding:4px 10px; font-size:12px; background:#c0304f; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>DJ0711 解析(Phase A)</h1>
+    <p><a href="/live" style="color:#cbb9ff;">→ ライブセッションを開始</a></p>
+    <form id="analyzeForm">
+      <label>YouTube URL(ローカルファイルを使う場合は空欄)</label>
+      <input type="url" name="youtube_url" placeholder="https://www.youtube.com/watch?v=...">
+      <label>またはローカルファイル</label>
+      <input type="file" name="file" accept="audio/*">
+      <label>ジャンルのヒント(任意)</label>
+      <input type="text" name="genre_hint" placeholder="例: Jazz">
+      <button type="submit">解析開始</button>
+    </form>
+    <div id="jobStatus" style="margin-top:16px;"></div>
+  </div>
+
+  <div class="card" style="max-width:960px;">
+    <h2>解析済みトラック</h2>
+    <div class="table-scroll">
+    <table>
+      <tr><th>ID</th><th>タイトル</th><th>BPM</th><th>Key</th><th>ジャンル</th><th>長さ(秒)</th><th></th></tr>
+      {% for t in tracks %}
+      <tr data-track-id="{{ t.id }}" data-genre="{{ t.genre }}" data-genres="{{ t.genres_json or '[]' }}">
+        <td>{{ t.id }}</td>
+        <td>{{ t.title }}</td>
+        <td>
+          <div class="bpm-cell">
+            <input type="number" class="bpmInput" value="{{ "%.1f"|format(t.tempo_bpm) }}" step="0.1" min="40" max="220">
+            <button type="button" class="bpmSaveBtn">保存</button>
+          </div>
+        </td>
+        <td>{{ t.key_name }} ({{ t.key_camelot }})</td>
+        <td>
+          <div class="genre-cell">
+            <div class="genre-tags"></div>
+            <div class="genre-primary"></div>
+            <button type="button" class="genreSaveBtn">保存</button>
+            <span class="genre-source {{ 'user' if t.genre_source == 'user' else '' }}">
+              {{ '✓ 確認済み' if t.genre_source == 'user' else ('自動 %.2f'|format(t.genre_confidence)) }}
+            </span>
+          </div>
+        </td>
+        <td>{{ "%.1f"|format(t.duration_sec) }}</td>
+        <td><button type="button" class="deleteBtn">削除</button></td>
+      </tr>
+      {% endfor %}
+    </table>
+    </div>
+  </div>
+
+<script type="module">
+import { updateTrackGenre, updateTrackTempo, deleteTrack } from "/static/js/api.js";
+
+const GENRES = ["Jpop", "Kpop", "Vocaloid", "Fusion", "Funk", "Rock", "Latin", "Jazz", "Classic", "Electro", "EDM"];
+
+for (const row of document.querySelectorAll("tr[data-track-id]")) {
+  const trackId = Number(row.dataset.trackId);
+  const currentGenres = JSON.parse(row.dataset.genres || "[]");
+  let selectedPrimary = currentGenres[0] || null;
+
+  const tagsContainer = row.querySelector(".genre-tags");
+  const primaryContainer = row.querySelector(".genre-primary");
+
+  if (selectedPrimary && !GENRES.includes(selectedPrimary)) {
+    const note = document.createElement("span");
+    note.className = "genre-unknown-note";
+    note.textContent = `現在: ${selectedPrimary}(不明)`;
+    tagsContainer.appendChild(note);
+  }
+
+  const checkboxes = GENRES.map((g) => {
+    const label = document.createElement("label");
+    label.className = "tag-chip";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.value = g;
+    cb.checked = currentGenres.includes(g);
+    cb.addEventListener("change", rebuildPrimary);
+    label.appendChild(cb);
+    label.append(g);
+    tagsContainer.appendChild(label);
+    return cb;
+  });
+
+  function rebuildPrimary() {
+    const checkedGenres = checkboxes.filter((cb) => cb.checked).map((cb) => cb.value);
+    if (!checkedGenres.includes(selectedPrimary)) {
+      selectedPrimary = checkedGenres[0] || null;
+    }
+    primaryContainer.innerHTML = "";
+    for (const g of checkedGenres) {
+      const label = document.createElement("label");
+      label.className = "primary-chip";
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = `primary-${trackId}`;
+      radio.value = g;
+      radio.checked = g === selectedPrimary;
+      radio.addEventListener("change", () => { selectedPrimary = g; });
+      label.appendChild(radio);
+      label.append(g);
+      primaryContainer.appendChild(label);
+    }
+  }
+  rebuildPrimary();
+
+  row.querySelector(".genreSaveBtn").addEventListener("click", async () => {
+    const checkedGenres = checkboxes.filter((cb) => cb.checked).map((cb) => cb.value);
+    if (checkedGenres.length === 0) {
+      alert("少なくとも1つジャンルを選択してください。");
+      return;
+    }
+    const primary = selectedPrimary && checkedGenres.includes(selectedPrimary) ? selectedPrimary : checkedGenres[0];
+    const ordered = [primary, ...checkedGenres.filter((g) => g !== primary)];
+
+    const data = await updateTrackGenre(trackId, ordered);
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+    row.dataset.genre = data.genre;
+    row.dataset.genres = JSON.stringify(data.genres);
+    const sourceEl = row.querySelector(".genre-source");
+    sourceEl.textContent = "✓ 確認済み";
+    sourceEl.classList.add("user");
+    const note = tagsContainer.querySelector(".genre-unknown-note");
+    if (note) note.remove();
+  });
+
+  // BPM手動上書き
+  row.querySelector(".bpmSaveBtn").addEventListener("click", async () => {
+    const bpm = Number(row.querySelector(".bpmInput").value);
+    const data = await updateTrackTempo(trackId, bpm);
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+    row.querySelector(".bpmInput").value = data.tempo_bpm.toFixed(1);
+  });
+
+  // 曲の削除
+  row.querySelector(".deleteBtn").addEventListener("click", async () => {
+    const title = row.children[1].textContent.trim();
+    if (!confirm(`「${title}」を削除しますか?この操作は取り消せません。`)) return;
+    const data = await deleteTrack(trackId);
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+    row.remove();
+  });
+}
+</script>
+<script>
+const form = document.getElementById("analyzeForm");
+const statusBox = document.getElementById("jobStatus");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fd = new FormData(form);
+  statusBox.innerHTML = "送信中...";
+  const res = await fetch("/api/analyze", { method: "POST", body: fd });
+  const data = await res.json();
+  if (!res.ok) {
+    statusBox.innerHTML = `<span class="badge error">エラー: ${data.error}</span>`;
+    return;
+  }
+  poll(data.job_id);
+});
+
+async function poll(jobId) {
+  const res = await fetch(`/api/status/${jobId}`);
+  const data = await res.json();
+  const badgeClass = data.status === "done" ? "done" : (data.status === "error" ? "error" : "running");
+  statusBox.innerHTML = `
+    <span class="badge ${badgeClass}">${data.status}</span>
+    <pre>${(data.logs || []).join("\n")}</pre>
+    ${data.error ? `<p style="color:#ffb3c6">${data.error}</p>` : ""}
+    ${data.track_id ? `<p>track_id: ${data.track_id}</p>` : ""}
+  `;
+  if (data.status === "running") {
+    setTimeout(() => poll(jobId), 1500);
+  } else if (data.status === "done") {
+    setTimeout(() => location.reload(), 1500);
+  }
+}
+</script>
+</body>
+</html>
